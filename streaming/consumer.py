@@ -58,7 +58,19 @@ def process_with_spark(messages):
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    df = spark.createDataFrame(messages, schema=schema)
+    cleaned = []
+    for m in messages:
+        cleaned.append({
+            "id": str(m["id"]),
+            "magnitude": float(m["magnitude"]),
+            "place": str(m["place"]),
+            "time": int(m["time"]),
+            "longitude": float(m["longitude"]),
+            "latitude": float(m["latitude"]),
+            "depth": float(m["depth"])
+        })
+
+    df = spark.createDataFrame(cleaned, schema=schema)
 
     df = df.withColumn(
         "event_time",

@@ -44,8 +44,9 @@ with DAG(
             --master-machine-type=e2-standard-2 \
             --master-boot-disk-size=30 \
             --num-workers=2 \
-            --worker-machine-type=e2-standard-2 \
-            --worker-boot-disk-size=30
+            --worker-machine-type=e2-standard-2 \ 
+            --worker-boot-disk-size=30\
+	    --single-node
         ''',
     )
 

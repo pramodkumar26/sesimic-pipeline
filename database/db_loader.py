@@ -1,7 +1,4 @@
 from pyspark.sql import SparkSession
-from datetime import datetime
-
-
 
 GCS_BUCKET = "sesimic-pipeline-raw-data"
 DB_HOST = "10.24.96.3"
@@ -17,18 +14,26 @@ def run():
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    today = datetime.utcnow().strftime("%Y%m%d")
     parquet_path = f"gs://{GCS_BUCKET}/processed/seismic/"
     df = spark.read.parquet(parquet_path)
     df = df.dropDuplicates(["id"])
 
+    df = df.select("id", "magnitude", "place", "event_time", "longitude", "latitude", "depth")
+
     print(f"Records found: {df.count()}")
     df.show(truncate=False)
 
-    rows = df.collect()
-    engine = create_db_engine()
-    create_table(engine)
-    load_data(engine, rows)
+    df.write \
+        .format("jdbc") \
+        .option("url", JDBC_URL) \
+        .option("dbtable", "seismic_events") \
+        .option("user", DB_USER) \
+        .option("password", DB_PASSWORD) \
+        .option("driver", "org.postgresql.Driver") \
+        .option("stringtype", "unspecified") \
+        .mode("append") \
+        .save()
+
     print("Data loaded to Cloud SQL!")
 
 if __name__ == "__main__":
