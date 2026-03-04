@@ -71,6 +71,16 @@ with DAG(
         ''',
     )
 
+
+    merge_staging = BashOperator(
+       task_id="merge_staging",
+       bash_command="""
+           /home/pramodarun26/airflow-env/bin/python \
+           /home/pramodarun26/seismic-pipeline/database/merge_staging.py
+    """,
+       dag=dag,
+    )
+
     task_delete_cluster = BashOperator(
         task_id='delete_dataproc_cluster',
         bash_command='''
@@ -80,4 +90,4 @@ with DAG(
         ''',
     )
 
-    task_fetch_publish >> task_create_cluster >> task_run_consumer >> task_run_db_loader >> task_delete_cluster
+    task_fetch_publish >> task_create_cluster >> task_run_consumer >> task_run_db_loader >> merge_staging >> task_delete_cluster
