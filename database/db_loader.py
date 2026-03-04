@@ -17,7 +17,6 @@ def run():
     parquet_path = f"gs://{GCS_BUCKET}/processed/seismic/"
     df = spark.read.parquet(parquet_path)
     df = df.dropDuplicates(["id"])
-
     df = df.select("id", "magnitude", "place", "event_time", "longitude", "latitude", "depth")
 
     print(f"Records found: {df.count()}")
@@ -26,15 +25,16 @@ def run():
     df.write \
         .format("jdbc") \
         .option("url", JDBC_URL) \
-        .option("dbtable", "seismic_events") \
+        .option("dbtable", "seismic_staging") \
         .option("user", DB_USER) \
         .option("password", DB_PASSWORD) \
         .option("driver", "org.postgresql.Driver") \
         .option("stringtype", "unspecified") \
-        .mode("append") \
+        .option("createTableColumnTypes", "id VARCHAR(50), place VARCHAR(255)") \
+        .mode("overwrite") \
         .save()
 
-    print("Data loaded to Cloud SQL!")
+    print("Staging table loaded!")
 
 if __name__ == "__main__":
     run()
